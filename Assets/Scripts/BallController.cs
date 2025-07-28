@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SocialPlatforms.Impl;
 
 public class BallController : MonoBehaviour
 {
@@ -7,26 +8,32 @@ public class BallController : MonoBehaviour
     void Start()
     {
         // این خط به توپ یک سرعت اولیه میده
-       GetComponent<Rigidbody2D>().velocity = new Vector2(1, 1).normalized * speed;
+        GetComponent<Rigidbody2D>().velocity = new Vector2(1, 1).normalized * speed;
 
     }
 
     void Update()
     {
-        // اگه توپ از پایین افتاد، بازی تموم شه
-        if (transform.position.y < -5f)
-        {
-            Debug.Log("Game Over!");
-        }
     }
     void OnTriggerEnter2D(Collider2D other)
-{
-    if (other.gameObject.name == "WallBottom")
     {
-        Debug.Log("Game Over!");
-        // یا بازی رو ریست کن:
-        // UnityEngine.SceneManagement.SceneManager.LoadScene(0);
+        if (other.gameObject.name == "WallBottom")
+        {
+            GameManager.Instance.LoseLife();
+        }
+        if (other.gameObject.tag == "ExtraLife")
+        {
+            GameManager.Instance.GainLife();
+        }
+
+    }
+    private void OnCollisionEnter2D(Collision2D other)
+    {
+        if (other.gameObject.CompareTag ("Player"))
+        {
+            GameManager.Instance.AddScore(1);
+        }
+            
     }
 }
 
-}
