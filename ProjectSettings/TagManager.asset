@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Ball
   - ExtraLife
+  - potion
   layers:
   - Default
   - TransparentFX
