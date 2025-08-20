@@ -9,8 +9,10 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance;
 
     public GameObject Ball;
+    public GameObject Wall;
     public GameObject DropPoint;
     public SpriteRenderer ballSpriteRenderer;
+    public SpriteRenderer bgSpriteRenderer;
 
     public int lives = 3;
     public TMP_Text livesText;
@@ -32,6 +34,15 @@ public class GameManager : MonoBehaviour
 
     // Skin pack data
     [System.Serializable]
+    public class bgPack
+    {
+        public string packName;
+        public Sprite stage1; // 0 points
+        public Sprite stage2; // 10 points  
+        public Sprite stage3; // 20 points
+    }
+    // Skin pack data
+    [System.Serializable]
     public class SkinPack
     {
         public string packName;
@@ -42,6 +53,7 @@ public class GameManager : MonoBehaviour
     }
 
     public SkinPack[] skinPacks = new SkinPack[3]; // 3 packs in inspector
+    public bgPack[] bgpack = new bgPack[1]; // 3 packs in inspector
 
     private int currentPackIndex = -1; // -1 = default pack
     private bool gameStarted = false;
@@ -67,7 +79,8 @@ public class GameManager : MonoBehaviour
     private void LoadPurchasedPacks()
     {
         // Load purchased status from IAP system or PlayerPrefs
-        for (int i = 0; i < skinPacks.Length; i++)
+        skinPacks[0].isPurchased = true;
+        for (int i = 1; i < skinPacks.Length; i++)
         {
             // For testing, you can set defaults here
             // In real game, this would come from IAP system
@@ -131,9 +144,9 @@ public class GameManager : MonoBehaviour
     public void ShowMenu(string title = "Game Over")
     {
         gameStarted = false;
-        Time.timeScale = 0f;
 
         menuPanel?.SetActive(true);
+        Wall?.SetActive(true);
         skinPackMenu?.SetActive(false);
 
         menuTitleText?.SetText(title);
@@ -171,18 +184,22 @@ public class GameManager : MonoBehaviour
         if (currentPackIndex < 0 || ballSpriteRenderer == null) return;
 
         var pack = skinPacks[currentPackIndex];
+        var Backgroundpack = bgpack[0];
 
         if (score >= 20 && pack.stage3Ball != null)
         {
             ballSpriteRenderer.sprite = pack.stage3Ball;
+            bgSpriteRenderer.sprite = Backgroundpack.stage3;
         }
         else if (score >= 10 && pack.stage2Ball != null)
         {
             ballSpriteRenderer.sprite = pack.stage2Ball;
+            bgSpriteRenderer.sprite = Backgroundpack.stage2;
         }
         else if (pack.stage1Ball != null)
         {
             ballSpriteRenderer.sprite = pack.stage1Ball;
+            bgSpriteRenderer.sprite = Backgroundpack.stage1;
         }
     }
 
@@ -205,7 +222,9 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        Ball.GetComponent<Rigidbody2D>().velocity = new Vector2(1, 1).normalized * 10f;
+        Ball.GetComponent<Rigidbody2D>().velocity = new Vector2(1, 1).normalized * 5f;
+
+        Wall?.SetActive(false);
 
         lives = 3;
         score = 0;
@@ -213,7 +232,6 @@ public class GameManager : MonoBehaviour
         menuPanel?.SetActive(false);
         skinPackMenu?.SetActive(false);
 
-        Time.timeScale = 1f;
         gameStarted = true;
 
         if (Ball != null && DropPoint != null)
