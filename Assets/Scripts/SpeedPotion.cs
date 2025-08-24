@@ -4,10 +4,16 @@ public class SpeedPotion : MonoBehaviour
 {
     public float speedMultiplier = 2f; // چند برابر سریع‌تر بشه
 
+
     private void OnTriggerEnter2D(Collider2D collision)
     {
+
         if (collision.CompareTag("Ball"))
         {
+            if (gameObject.CompareTag("potion"))
+            {
+                Audio.Instance.SFXplayer(Audio.Instance.SpeedBost);
+            }
             Rigidbody2D rb = collision.GetComponent<Rigidbody2D>();
             if (rb != null)
             {

@@ -58,6 +58,8 @@ public class GameManager : MonoBehaviour
     private int currentPackIndex = -1; // -1 = default pack
     private bool gameStarted = false;
 
+
+
     private void Awake()
     {
         Instance = this;
@@ -97,6 +99,11 @@ public class GameManager : MonoBehaviour
             PlayerPrefs.Save();
             UpdatePackUI();
         }
+    }
+    public void clickNoise()
+    {
+
+        Audio.Instance.SFXplayer(Audio.Instance.BtnPress);
     }
 
     private void SetupButtonListeners()
@@ -145,6 +152,8 @@ public class GameManager : MonoBehaviour
     {
         gameStarted = false;
 
+        Audio.Instance.MusicSwitch(Audio.Instance.MenueMusic);
+
         menuPanel?.SetActive(true);
         Wall?.SetActive(true);
         skinPackMenu?.SetActive(false);
@@ -154,6 +163,7 @@ public class GameManager : MonoBehaviour
 
     public void ShowSkinPackMenu()
     {
+        clickNoise();
         menuPanel?.SetActive(false);
         skinPackMenu?.SetActive(true);
         UpdatePackUI();
@@ -161,12 +171,14 @@ public class GameManager : MonoBehaviour
 
     public void ShowMainMenu()
     {
+        clickNoise();
         skinPackMenu?.SetActive(false);
         menuPanel?.SetActive(true);
     }
 
     public void SelectPack(int packIndex)
     {
+        clickNoise();
         if (packIndex < 0 || packIndex >= skinPacks.Length) return;
 
         var pack = skinPacks[packIndex];
@@ -216,6 +228,7 @@ public class GameManager : MonoBehaviour
 
     public void StartGame()
     {
+        clickNoise();
         if (currentPackIndex < 0)
         {
             Debug.Log("Please select a skin pack first!");
@@ -234,6 +247,8 @@ public class GameManager : MonoBehaviour
 
         gameStarted = true;
 
+        Audio.Instance.MusicSwitch(Audio.Instance.LevelMusic);
+
         if (Ball != null && DropPoint != null)
         {
             Ball.transform.position = DropPoint.transform.position;
@@ -246,6 +261,8 @@ public class GameManager : MonoBehaviour
 
     public void GainLife()
     {
+
+        Audio.Instance.SFXplayer(Audio.Instance.ExtraLife);
         lives++;
         UpdateLivesUI();
     }
@@ -257,6 +274,8 @@ public class GameManager : MonoBehaviour
         if (lives > 0)
         {
             Debug.Log("lost a life");
+            Audio.Instance.SFXplayer(Audio.Instance.LostLife);
+
             if (Ball != null && DropPoint != null)
             {
                 Ball.transform.position = DropPoint.transform.position;
@@ -265,6 +284,7 @@ public class GameManager : MonoBehaviour
         else
         {
             Debug.Log("gameOver");
+            Audio.Instance.SFXplayer(Audio.Instance.GameOver);
             ShowMenu("Game Over");
         }
         UpdateLivesUI();
@@ -280,6 +300,14 @@ public class GameManager : MonoBehaviour
         if (score != 999 && gameStarted)
         {
             score += amount;
+            if (score > 10 && score < 20)
+            {
+                Audio.Instance.SFXplayer(Audio.Instance.BigBallBounce);
+            }
+            else
+            {
+                Audio.Instance.SFXplayer(Audio.Instance.BallBounce);
+            }
             UpdateBallSprite(); // Check if ball should evolve
             UpdateScoreUI();
         }

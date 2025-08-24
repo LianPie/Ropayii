@@ -10,8 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 7028528278511878256}
   - component: {fileID: 3802427753169047483}
+  - component: {fileID: 8846396931434075693}
   - component: {fileID: -6467374514065433075}
-  - component: {fileID: 8348101550279530540}
   m_Layer: 0
   m_Name: extraLife
   m_TagString: ExtraLife
@@ -86,6 +86,19 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &8846396931434075693
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7361859535619044125}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1216a56e1177ebd499685ae55b29b8b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  speedMultiplier: 1
 --- !u!61 &-6467374514065433075
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -131,16 +144,3 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 2.6, y: 2.8}
   m_EdgeRadius: 0
---- !u!114 &8348101550279530540
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7361859535619044125}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1216a56e1177ebd499685ae55b29b8b1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  speedMultiplier: 1
