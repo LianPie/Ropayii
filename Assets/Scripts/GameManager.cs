@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 
 public class GameManager : MonoBehaviour
 {
@@ -42,6 +43,7 @@ public class GameManager : MonoBehaviour
     public Button[] skinPackButtons;
     public Button backButton;
     public GameObject[] packOwnedIcons; // Checkmarks for owned packs
+    public GameObject[] buyPackBtn; // Checkmarks for owned packs
 
     // Skin pack data
     [System.Serializable]
@@ -62,7 +64,6 @@ public class GameManager : MonoBehaviour
         public Sprite stage2Ball; // 10 points  
         public Sprite stage3Ball; // 20 points
         public bool isPurchased; // Set to true after IAP
-        public GameObject PurchaseBtn; // Set to true after IAP
     }
 
     public SkinPack[] skinPacks = new SkinPack[3]; // 3 packs in inspector
@@ -104,6 +105,7 @@ public class GameManager : MonoBehaviour
         SetupButtonListeners();
         UpdatePackUI();
         UpdateBestScoreUI();
+        SelectPack(0);
     }
 
     private void LoadAllData()
@@ -208,12 +210,7 @@ public class GameManager : MonoBehaviour
         {
             var pack = skinPacks[i];
 
-            // Update owned icons
-            if (i < packOwnedIcons.Length && packOwnedIcons[i] != null)
-            {
-                packOwnedIcons[i].SetActive(pack.isPurchased);
-                if(pack.PurchaseBtn != null) pack.PurchaseBtn.SetActive(!pack.isPurchased);
-            }
+            buyPackBtn[i]?.SetActive(!(pack.isPurchased));
 
             // Enable/disable pack buttons based on purchase status
             if (i < skinPackButtons.Length)

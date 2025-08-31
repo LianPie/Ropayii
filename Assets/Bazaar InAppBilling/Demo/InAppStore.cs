@@ -91,7 +91,7 @@ public class InAppStore : MonoBehaviour
                 
                 break;
             case 1: // enable double coin
-                GameManager.Instance.UnlockPack(productIndex);
+                GameManager.Instance.UnlockPack(1);
                 break;
             default:
                 throw new UnassignedReferenceException("You forgot to give user the product after purchase. product: " + purchase.productId + ", index: " + productIndex);
@@ -165,8 +165,8 @@ public class InAppStore : MonoBehaviour
             case 0:
 
                 break;
-            case 1: // enable double coin
-                GameManager.Instance.UnlockPack(productIndex);
+            case 1: // enable pack
+                GameManager.Instance.UnlockPack(1);
                 break;
 
             default:
