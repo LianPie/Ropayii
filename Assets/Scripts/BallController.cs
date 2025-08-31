@@ -20,6 +20,8 @@ public class BallController : MonoBehaviour
         if (other.gameObject.name == "WallBottom")
         {
             GameManager.Instance.LoseLife();
+            if (GameManager.Instance.lives != 0)
+                GetComponent<Rigidbody2D>().velocity = new Vector2(1, 1).normalized * speed;
         }
         if (other.gameObject.tag == "ExtraLife")
         {
@@ -29,11 +31,11 @@ public class BallController : MonoBehaviour
     }
     private void OnCollisionEnter2D(Collision2D other)
     {
-        if (other.gameObject.CompareTag ("Player"))
+        if (other.gameObject.CompareTag("Player"))
         {
             GameManager.Instance.AddScore(1);
         }
-            
+
     }
 }
 

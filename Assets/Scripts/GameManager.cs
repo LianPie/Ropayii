@@ -2,6 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using System;
 
 public class GameManager : MonoBehaviour
 {
@@ -11,6 +12,7 @@ public class GameManager : MonoBehaviour
     public GameObject Ball;
     public GameObject Wall;
     public GameObject DropPoint;
+    public GameObject spawner;
     public SpriteRenderer ballSpriteRenderer;
     public SpriteRenderer bgSpriteRenderer;
 
@@ -18,13 +20,22 @@ public class GameManager : MonoBehaviour
     public TMP_Text livesText;
 
     public int score = 0;
+    public int bestScore = 0;
     public TMP_Text scoreText;
+    public TMP_Text bestScoreText;
 
     // Menu system variables
     public GameObject menuPanel;
     public Button startButton;
     public Button skinPackButton;
+    public Button soundSettingsButton;
     public TMP_Text menuTitleText;
+
+    // Sound settings menu
+    public GameObject soundSettingsMenu;
+    public Slider musicVolumeSlider;
+    public Slider sfxVolumeSlider;
+    public Button soundBackButton;
 
     // Skin pack system variables
     public GameObject skinPackMenu;
@@ -41,6 +52,7 @@ public class GameManager : MonoBehaviour
         public Sprite stage2; // 10 points  
         public Sprite stage3; // 20 points
     }
+
     // Skin pack data
     [System.Serializable]
     public class SkinPack
@@ -50,6 +62,7 @@ public class GameManager : MonoBehaviour
         public Sprite stage2Ball; // 10 points  
         public Sprite stage3Ball; // 20 points
         public bool isPurchased; // Set to true after IAP
+        public GameObject PurchaseBtn; // Set to true after IAP
     }
 
     public SkinPack[] skinPacks = new SkinPack[3]; // 3 packs in inspector
@@ -58,11 +71,25 @@ public class GameManager : MonoBehaviour
     private int currentPackIndex = -1; // -1 = default pack
     private bool gameStarted = false;
 
-
+    // Audio settings
+    private float musicVolume = 1f;
+    private float sfxVolume = 1f;
 
     private void Awake()
     {
-        Instance = this;
+        // Singleton pattern
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        LoadAllData();
     }
 
     void Start()
@@ -76,16 +103,46 @@ public class GameManager : MonoBehaviour
         ShowMenu("Start Game");
         SetupButtonListeners();
         UpdatePackUI();
+        UpdateBestScoreUI();
+    }
+
+    private void LoadAllData()
+    {
+        // Load best score
+        bestScore = PlayerPrefs.GetInt("BestScore", 0);
+
+        // Load audio settings
+        musicVolume = PlayerPrefs.GetFloat("MusicVolume", 1f);
+        sfxVolume = PlayerPrefs.GetFloat("SFXVolume", 1f);
+
+        // Apply audio settings
+        if (Audio.Instance != null)
+        {
+            Audio.Instance.SetMusicVolume(musicVolume);
+            Audio.Instance.SetSFXVolume(sfxVolume);
+        }
+    }
+
+    private void SaveAllData()
+    {
+        // Save best score
+        PlayerPrefs.SetInt("BestScore", bestScore);
+
+        // Save audio settings
+        PlayerPrefs.SetFloat("MusicVolume", musicVolume);
+        PlayerPrefs.SetFloat("SFXVolume", sfxVolume);
+
+        PlayerPrefs.Save();
     }
 
     private void LoadPurchasedPacks()
     {
-        // Load purchased status from IAP system or PlayerPrefs
-        skinPacks[0].isPurchased = true;
+        // Load purchased status from PlayerPrefs
+        skinPacks[0].isPurchased = true; // First pack is always owned
+
         for (int i = 1; i < skinPacks.Length; i++)
         {
-            // For testing, you can set defaults here
-            // In real game, this would come from IAP system
+            Debug.Log(skinPacks[i].packName + " " + i);
             skinPacks[i].isPurchased = PlayerPrefs.GetInt($"PackPurchased_{i}", 0) == 1;
         }
     }
@@ -96,13 +153,13 @@ public class GameManager : MonoBehaviour
         {
             skinPacks[packIndex].isPurchased = true;
             PlayerPrefs.SetInt($"PackPurchased_{packIndex}", 1);
-            PlayerPrefs.Save();
+            SaveAllData();
             UpdatePackUI();
         }
     }
+
     public void clickNoise()
     {
-
         Audio.Instance.SFXplayer(Audio.Instance.BtnPress);
     }
 
@@ -115,6 +172,19 @@ public class GameManager : MonoBehaviour
         skinPackButton?.onClick.RemoveAllListeners();
         skinPackButton?.onClick.AddListener(ShowSkinPackMenu);
 
+        soundSettingsButton?.onClick.RemoveAllListeners();
+        soundSettingsButton?.onClick.AddListener(ShowSoundSettingsMenu);
+
+        // Sound settings buttons
+        musicVolumeSlider?.onValueChanged.RemoveAllListeners();
+        musicVolumeSlider?.onValueChanged.AddListener(SetMusicVolume);
+
+        sfxVolumeSlider?.onValueChanged.RemoveAllListeners();
+        sfxVolumeSlider?.onValueChanged.AddListener(SetSFXVolume);
+
+        soundBackButton?.onClick.RemoveAllListeners();
+        soundBackButton?.onClick.AddListener(ShowMainMenu);
+
         // Navigation buttons
         backButton?.onClick.RemoveAllListeners();
         backButton?.onClick.AddListener(ShowMainMenu);
@@ -126,6 +196,10 @@ public class GameManager : MonoBehaviour
             skinPackButtons[i].onClick.RemoveAllListeners();
             skinPackButtons[i].onClick.AddListener(() => SelectPack(packIndex));
         }
+
+        // Set initial slider values
+        if (musicVolumeSlider != null) musicVolumeSlider.value = musicVolume;
+        if (sfxVolumeSlider != null) sfxVolumeSlider.value = sfxVolume;
     }
 
     private void UpdatePackUI()
@@ -138,6 +212,7 @@ public class GameManager : MonoBehaviour
             if (i < packOwnedIcons.Length && packOwnedIcons[i] != null)
             {
                 packOwnedIcons[i].SetActive(pack.isPurchased);
+                if(pack.PurchaseBtn != null) pack.PurchaseBtn.SetActive(!pack.isPurchased);
             }
 
             // Enable/disable pack buttons based on purchase status
@@ -148,17 +223,43 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    private void UpdateBestScoreUI()
+    {
+        if (bestScoreText != null)
+        {
+            bestScoreText.text = $"Best: {bestScore}";
+        }
+    }
+
     public void ShowMenu(string title = "Game Over")
     {
         gameStarted = false;
+
+        // Check if we need to update best score
+        if (score > bestScore)
+        {
+            bestScore = score;
+            UpdateBestScoreUI();
+            SaveAllData();
+        }
 
         Audio.Instance.MusicSwitch(Audio.Instance.MenueMusic);
 
         menuPanel?.SetActive(true);
         Wall?.SetActive(true);
+        spawner?.SetActive(false);
         skinPackMenu?.SetActive(false);
+        soundSettingsMenu?.SetActive(false);
 
         menuTitleText?.SetText(title);
+    }
+
+    public void ShowSoundSettingsMenu()
+    {
+        clickNoise();
+        menuPanel?.SetActive(false);
+        skinPackMenu?.SetActive(false);
+        soundSettingsMenu?.SetActive(true);
     }
 
     public void ShowSkinPackMenu()
@@ -166,6 +267,7 @@ public class GameManager : MonoBehaviour
         clickNoise();
         menuPanel?.SetActive(false);
         skinPackMenu?.SetActive(true);
+        soundSettingsMenu?.SetActive(false);
         UpdatePackUI();
     }
 
@@ -173,6 +275,7 @@ public class GameManager : MonoBehaviour
     {
         clickNoise();
         skinPackMenu?.SetActive(false);
+        soundSettingsMenu?.SetActive(false);
         menuPanel?.SetActive(true);
     }
 
@@ -189,6 +292,26 @@ public class GameManager : MonoBehaviour
             ApplyStage1Ball(); // Start with stage 1 ball
             ShowMainMenu();
         }
+    }
+
+    public void SetMusicVolume(float volume)
+    {
+        musicVolume = volume;
+        if (Audio.Instance != null)
+        {
+            Audio.Instance.SetMusicVolume(musicVolume);
+        }
+        SaveAllData();
+    }
+
+    public void SetSFXVolume(float volume)
+    {
+        sfxVolume = volume;
+        if (Audio.Instance != null)
+        {
+            Audio.Instance.SetSFXVolume(sfxVolume);
+        }
+        SaveAllData();
     }
 
     private void UpdateBallSprite()
@@ -238,12 +361,14 @@ public class GameManager : MonoBehaviour
         Ball.GetComponent<Rigidbody2D>().velocity = new Vector2(1, 1).normalized * 5f;
 
         Wall?.SetActive(false);
+        spawner?.SetActive(true);
 
         lives = 3;
         score = 0;
 
         menuPanel?.SetActive(false);
         skinPackMenu?.SetActive(false);
+        soundSettingsMenu?.SetActive(false);
 
         gameStarted = true;
 
@@ -261,7 +386,6 @@ public class GameManager : MonoBehaviour
 
     public void GainLife()
     {
-
         Audio.Instance.SFXplayer(Audio.Instance.ExtraLife);
         lives++;
         UpdateLivesUI();
@@ -329,5 +453,19 @@ public class GameManager : MonoBehaviour
     public void TestUnlockPack(int packIndex)
     {
         UnlockPack(packIndex);
+    }
+
+    // Handle application focus/pause events to save data
+    private void OnApplicationPause(bool pauseStatus)
+    {
+        if (pauseStatus)
+        {
+            SaveAllData();
+        }
+    }
+
+    private void OnApplicationQuit()
+    {
+        SaveAllData();
     }
 }
